@@ -13,8 +13,6 @@ class ProductController {
           id: product.id,
           body: product,
         });
-
-        console.log(resp);
       }
 
       return response.json({
@@ -48,8 +46,6 @@ class ProductController {
         },
       });
 
-      console.log(body);
-
       // const indices = await elastic.cat.indices({ v: true });
 
       // console.log(indices);
@@ -65,7 +61,6 @@ class ProductController {
         },
       });
     } catch (exception) {
-      console.log(exception);
       return response.json({
         meta: {
           status: 'error',
