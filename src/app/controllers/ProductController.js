@@ -1,20 +1,71 @@
-import User from '../models/Product';
+import { Client } from '@elastic/elasticsearch';
+import Product from '../models/Product';
 
+const elastic = new Client({ node: 'http://localhost:9200' });
 class ProductController {
-  async search(request, response) {
+  async insert(request, response) {
     try {
-      // const { search } = request.params;
-      const users = await User.findAll();
+      const product = await Product.create(request.body);
+
+      if (product) {
+        const { resp } = await elastic.create({
+          index: 'products',
+          id: product.id,
+          body: product,
+        });
+
+        console.log(resp);
+      }
 
       return response.json({
-        data: users,
+        data: product,
         meta: {
           status: 'success',
-          message: 'Successfully selected registers',
-          count: users.length,
+          message: 'Successfully inserted registers',
         },
       });
     } catch (exception) {
+      return response.json({
+        meta: {
+          status: 'error',
+          message: 'Something went wrong on the server',
+          errorMessage: exception.message,
+        },
+      });
+    }
+  }
+
+  async search(request, response) {
+    try {
+      const { search } = request.params;
+
+      const { body } = await elastic.search({
+        index: 'products',
+        size: 20,
+        from: 0,
+        query: {
+          match: { description: { query: search } },
+        },
+      });
+
+      console.log(body);
+
+      // const indices = await elastic.cat.indices({ v: true });
+
+      // console.log(indices);
+
+      const products = await Product.findAll();
+
+      return response.json({
+        data: products,
+        meta: {
+          status: 'success',
+          message: 'Successfully selected registers',
+          count: products.length,
+        },
+      });
+    } catch (exception) {
+      console.log(exception);
       return response.json({
         meta: {
           status: 'error',
